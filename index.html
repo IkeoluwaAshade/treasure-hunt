@@ -14,15 +14,16 @@
       max-width: 600px;
       height: auto;
     }
-    #message {
+    #message, #error {
       font-size: 24px;
-      color: green;
       margin-top: 20px;
+      display: none;
+    }
+    #message {
+      color: green;
     }
     #error {
-      font-size: 24px;
       color: red;
-      margin-top: 20px;
     }
     #switch-camera {
       margin-top: 20px;
@@ -40,44 +41,42 @@
 <h1>Treasure Hunt</h1>
 <p>Find the treasure product!</p>
 
-<!-- Video stream from the camera -->
 <video id="video" autoplay></video>
 
-<!-- Switch Camera Button -->
 <button id="switch-camera">Switch Camera</button>
 
-<!-- Messages -->
-<div id="message" style="display: none;">Congratulations, you found the treasure!</div>
-<div id="error" style="display: none;">Sorry, try again.</div>
+
+<div id="message">Congratulations, you found the treasure!</div>
+<div id="error">Sorry, try again.</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/tensorflow/3.15.0/tf.min.js"></script>
 <script src="https://unpkg.com/ml5@latest/dist/ml5.min.js"></script>
 
 <script>
   let currentStream;
-  let usingFrontCamera = true;  // Start with front camera
+  let usingFrontCamera = true;
 
   const video = document.getElementById('video');
   const switchCameraButton = document.getElementById('switch-camera');
 
-  // List of products (replace with your actual products)
-  const treasureProducts = ["apple", "banana", "milk", "bread", "treasure product", "hamptons"];
+  
+  const treasureProducts = ["coca-cola", "apple", "banana", "milk", "bread", "soda", "cola", "soft drink", "beverage"];
 
-  // Function to access the camera
+ 
   function getCameraStream(useFrontCamera) {
-    // If there's already a stream, stop it before switching
+    
     if (currentStream) {
       currentStream.getTracks().forEach(track => track.stop());
     }
 
-    // Set the facingMode based on the camera to use
+    
     const constraints = {
       video: {
         facingMode: useFrontCamera ? 'user' : 'environment'
       }
     };
 
-    // Request the camera feed
+   
     navigator.mediaDevices.getUserMedia(constraints)
       .then(function(stream) {
         currentStream = stream;
@@ -88,26 +87,26 @@
       });
   }
 
-  // Load the front camera by default
+  
   getCameraStream(usingFrontCamera);
 
-  // Switch camera when button is clicked
+  
   switchCameraButton.addEventListener('click', function() {
     usingFrontCamera = !usingFrontCamera;
     getCameraStream(usingFrontCamera);
   });
 
-  // Load the ML5.js Image Classifier Model
-  const classifier = ml5.imageClassifier('MobileNet', video, modelLoaded);
+  
+  const classifier = ml5.imageClassifier('MobileNet', modelLoaded);
 
   function modelLoaded() {
     console.log('Model Loaded!');
     classifyVideo();
   }
 
-  // Classify the video stream
+
   function classifyVideo() {
-    classifier.classify(function(err, results) {
+    classifier.classify(video, function(err, results) {
       if (err) {
         console.error(err);
         return;
@@ -116,18 +115,22 @@
       const productName = results[0].label.toLowerCase();
       console.log("Detected product:", productName);
 
-      // Check if detected product is in the treasure list
+      
+      const messageDiv = document.getElementById('message');
+      const errorDiv = document.getElementById('error');
+
+      
       if (treasureProducts.includes(productName)) {
-        document.getElementById('message').textContent = `Congratulations, you found ${productName}!`;
-        document.getElementById('message').style.display = 'block';
-        document.getElementById('error').style.display = 'none';
+        messageDiv.textContent = `Congratulations, you found ${productName}!`;
+        messageDiv.style.display = 'block';
+        errorDiv.style.display = 'none';
       } else {
-        document.getElementById('error').textContent = `Sorry, ${productName} is not the treasure. Try again!`;
-        document.getElementById('message').style.display = 'none';
-        document.getElementById('error').style.display = 'block';
+        errorDiv.textContent = `Sorry, ${productName} is not the treasure. Try again!`;
+        errorDiv.style.display = 'block';
+        messageDiv.style.display = 'none';
       }
 
-      // Keep classifying
+      
       classifyVideo();
     });
   }
