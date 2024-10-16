@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AR Treasure Hunt</title>
+  <title>City Market Treasure Hunt</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -37,7 +37,7 @@
 </head>
 <body>
 
-<h1>AR Treasure Hunt</h1>
+<h1>Treasure Hunt</h1>
 <p>Find the treasure product!</p>
 
 <!-- Video stream from the camera -->
@@ -59,6 +59,9 @@
 
   const video = document.getElementById('video');
   const switchCameraButton = document.getElementById('switch-camera');
+
+  // List of products (replace with your actual products)
+  const treasureProducts = ["apple", "banana", "milk", "bread", "treasure product"];
 
   // Function to access the camera
   function getCameraStream(useFrontCamera) {
@@ -110,16 +113,16 @@
         return;
       }
 
-      const productName = results[0].label;
-      console.log(productName);
+      const productName = results[0].label.toLowerCase();
+      console.log("Detected product:", productName);
 
-      // Assuming "target product" is the treasure
-      const targetProduct = "treasure product name";  // Replace with actual product name
-
-      if (productName.includes(targetProduct)) {
+      // Check if detected product is in the treasure list
+      if (treasureProducts.includes(productName)) {
+        document.getElementById('message').textContent = `Congratulations, you found ${productName}!`;
         document.getElementById('message').style.display = 'block';
         document.getElementById('error').style.display = 'none';
       } else {
+        document.getElementById('error').textContent = `Sorry, ${productName} is not the treasure. Try again!`;
         document.getElementById('message').style.display = 'none';
         document.getElementById('error').style.display = 'block';
       }
