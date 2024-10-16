@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Treasure Hunt</title>
+  <title>AR Treasure Hunt</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -24,15 +24,27 @@
       color: red;
       margin-top: 20px;
     }
+    #switch-camera {
+      margin-top: 20px;
+      padding: 10px;
+      font-size: 16px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
 
-<h1>Treasure Hunt</h1>
+<h1>AR Treasure Hunt</h1>
 <p>Find the treasure product!</p>
 
 <!-- Video stream from the camera -->
 <video id="video" autoplay></video>
+
+<!-- Switch Camera Button -->
+<button id="switch-camera">Switch Camera</button>
 
 <!-- Messages -->
 <div id="message" style="display: none;">Congratulations, you found the treasure!</div>
@@ -42,18 +54,47 @@
 <script src="https://unpkg.com/ml5@latest/dist/ml5.min.js"></script>
 
 <script>
-  // Step 2: Request Camera Access
+  let currentStream;
+  let usingFrontCamera = true;  // Start with front camera
+
   const video = document.getElementById('video');
+  const switchCameraButton = document.getElementById('switch-camera');
 
-  navigator.mediaDevices.getUserMedia({ video: true })
-    .then(function(stream) {
-      video.srcObject = stream;
-    })
-    .catch(function(err) {
-      console.log('Camera access denied: ', err);
-    });
+  // Function to access the camera
+  function getCameraStream(useFrontCamera) {
+    // If there's already a stream, stop it before switching
+    if (currentStream) {
+      currentStream.getTracks().forEach(track => track.stop());
+    }
 
-  // Step 3: Load the Image Classifier Model
+    // Set the facingMode based on the camera to use
+    const constraints = {
+      video: {
+        facingMode: useFrontCamera ? 'user' : 'environment'
+      }
+    };
+
+    // Request the camera feed
+    navigator.mediaDevices.getUserMedia(constraints)
+      .then(function(stream) {
+        currentStream = stream;
+        video.srcObject = stream;
+      })
+      .catch(function(err) {
+        console.log('Error accessing camera: ', err);
+      });
+  }
+
+  // Load the front camera by default
+  getCameraStream(usingFrontCamera);
+
+  // Switch camera when button is clicked
+  switchCameraButton.addEventListener('click', function() {
+    usingFrontCamera = !usingFrontCamera;
+    getCameraStream(usingFrontCamera);
+  });
+
+  // Load the ML5.js Image Classifier Model
   const classifier = ml5.imageClassifier('MobileNet', video, modelLoaded);
 
   function modelLoaded() {
@@ -61,7 +102,7 @@
     classifyVideo();
   }
 
-  // Step 4: Classify Video Stream
+  // Classify the video stream
   function classifyVideo() {
     classifier.classify(function(err, results) {
       if (err) {
@@ -69,7 +110,6 @@
         return;
       }
 
-      // Step 5: Detect the correct product (use the product name or identifier)
       const productName = results[0].label;
       console.log(productName);
 
