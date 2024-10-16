@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Treasure Hunt</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+    #video {
+      width: 100%;
+      max-width: 600px;
+      height: auto;
+    }
+    #message {
+      font-size: 24px;
+      color: green;
+      margin-top: 20px;
+    }
+    #error {
+      font-size: 24px;
+      color: red;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Treasure Hunt</h1>
+<p>Find the treasure product!</p>
+
+<!-- Video stream from the camera -->
+<video id="video" autoplay></video>
+
+<!-- Messages -->
+<div id="message" style="display: none;">Congratulations, you found the treasure!</div>
+<div id="error" style="display: none;">Sorry, try again.</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tensorflow/3.15.0/tf.min.js"></script>
+<script src="https://unpkg.com/ml5@latest/dist/ml5.min.js"></script>
+
+<script>
+  // Step 2: Request Camera Access
+  const video = document.getElementById('video');
+
+  navigator.mediaDevices.getUserMedia({ video: true })
+    .then(function(stream) {
+      video.srcObject = stream;
+    })
+    .catch(function(err) {
+      console.log('Camera access denied: ', err);
+    });
+
+  // Step 3: Load the Image Classifier Model
+  const classifier = ml5.imageClassifier('MobileNet', video, modelLoaded);
+
+  function modelLoaded() {
+    console.log('Model Loaded!');
+    classifyVideo();
+  }
+
+  // Step 4: Classify Video Stream
+  function classifyVideo() {
+    classifier.classify(function(err, results) {
+      if (err) {
+        console.error(err);
+        return;
+      }
+
+      // Step 5: Detect the correct product (use the product name or identifier)
+      const productName = results[0].label;
+      console.log(productName);
+
+      // Assuming "target product" is the treasure
+      const targetProduct = "treasure product name";  // Replace with actual product name
+
+      if (productName.includes(targetProduct)) {
+        document.getElementById('message').style.display = 'block';
+        document.getElementById('error').style.display = 'none';
+      } else {
+        document.getElementById('message').style.display = 'none';
+        document.getElementById('error').style.display = 'block';
+      }
+
+      // Keep classifying
+      classifyVideo();
+    });
+  }
+</script>
+
+</body>
+</html>
